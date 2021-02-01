@@ -1,26 +1,48 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import axios from 'axios'
+import React, { useEffect, useState } from 'react'
+import Pagination from './components/Pagination'
+import Posts from './components/Posts'
+import { modelPosts } from './models/modelPosts'
 
-function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+const defaultPost: modelPosts[] = []
+
+const App: React.FC = () => {
+    const [posts, setPosts] = useState(defaultPost)
+    const [loading, setLoading] = useState(false)
+    const [currentPage, setCurrentPage] = useState(1)
+    const [postPerPage] = useState(10)
+    const paginate = (pageNumber: number) => setCurrentPage(pageNumber)
+
+    useEffect(() => {
+        ;(() => {
+            setLoading(true)
+            axios
+                .get('https://jsonplaceholder.typicode.com/posts')
+                .then((rs) => {
+                    setPosts(rs.data)
+                    setLoading(false)
+                })
+                .catch((e) => {
+                    console.log(e)
+                })
+        })()
+    }, [])
+
+    const indexOfLastPost = currentPage * postPerPage
+    const indexOfFirstPost = indexOfLastPost - postPerPage
+    const currentPost = posts.slice(indexOfFirstPost, indexOfLastPost)
+
+    return (
+        <div>
+            <h3>Page Number: {currentPage}</h3>
+            <Posts loading={loading} posts={currentPost} />
+            <Pagination
+                postPerPage={postPerPage}
+                totalPosts={posts.length}
+                paginate={paginate}
+            />
+        </div>
+    )
 }
 
-export default App;
+export default App
